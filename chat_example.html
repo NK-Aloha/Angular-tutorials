@@ -2,64 +2,91 @@
 <head>
   <script src="https://cdn.firebase.com/js/client/2.2.1/firebase.js"></script>
   <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'></script>
-  <link rel="stylesheet" type="text/css" href="/resources/tutorial/css/example.css">
+  <link rel="stylesheet" type="text/css" href="https://www.firebase.com/resources/tutorial/css/example.css">
 </head>
 <body>
 
 <!-- CHAT MARKUP -->
-<div class="example-chat l-demo-container">
-  <header>Firebase Chat Demo</header>
+<div id="homeDiv">
+<div id='messagesUser' class='example-chat l-demo-container'></div>
+<div id="chatApp" class="example-chat l-demo-container" firebaseUrl= "https://jgtmenxwee1.firebaseio-demo.com/">
 
-  <div class='example-chat-toolbar'>
-    <label for="nameInput">Username:</label>
-    <input type='text' id='nameInput' placeholder='enter a username...'>
-  </div>
-
-  <ul id='example-messages' class="example-chat-messages"></ul>
-
-  <footer>
-    <input type='text' id='messageInput'  placeholder='Type a message...'>
-  </footer>
+</div>
 </div>
 
 <!-- CHAT JAVACRIPT -->
 <script>
+  //ACCESING FIREBASE VARIABLE
+  var firebaseUrl = $('#chatApp').attr('firebaseUrl');
+
   // CREATE A REFERENCE TO FIREBASE
-  var messagesRef = new Firebase('https://jgtmenxwee1.firebaseio-demo.com/');
+  var messagesRef = new Firebase(firebaseUrl);
 
   // REGISTER DOM ELEMENTS
+  var mainDivElement = $("<header>Firebase Chat Demo</header> <div class='example-chat-toolbar'> <label for='nameInput'>Username:</label> <input type='text' id='nameInput' placeholder='enter a username...'> </div> <footer> <label for='priorityInput'>Please enter priority:</label> <select id='priorityInput'> <option value='black' selected>ASAP </option> <option value='yellow'>Hurry </option> <option value='red'>Emergency </option> </select></br> <input type='text' id='messageInput'  placeholder='Type a message...'> </footer>");
+  var ulElement = $("<ul id='example-messages' class='example-chat-messages'></ul>");
+  var mainDivField = $('#chatApp');
+  var newDivField = $('#messagesUser');
+  mainDivField.append(mainDivElement);
+  newDivField.append(ulElement);
+  var messageList = $('#example-messages');
+  var priorityField = $('#priorityInput');
   var messageField = $('#messageInput');
   var nameField = $('#nameInput');
-  var messageList = $('#example-messages');
-
+  
+  
   // LISTEN FOR KEYPRESS EVENT
   messageField.keypress(function (e) {
     if (e.keyCode == 13) {
       //FIELD VALUES
       var username = nameField.val();
       var message = messageField.val();
+	  var priority = priorityField.val();
+
+	  var newUlElement = $("<ul id='newexample-messages-"+username+"' class='example-chat-messages'></ul>");
+	  var $div = $("<div>", { id: 'new-'+username, class: 'example-chat l-demo-container' });
+	  $('#homeDiv').prepend($div);
+	  var idfieldname = '#new-'+username;
+	  var newDivField = $(idfieldname);
+	  newDivField.append(newUlElement);
+	  var ulfieldname = '#newexample-messages-'+username;
+	  newMessageList = $(ulfieldname);
+	  var messageElement = '';
+	  messageElement = $("<li>");
+	  var messageSpan = $("<span style='color:"+priority+"'></span>");
+      var nameElement = $("<strong class='example-chat-username'></strong></li>");
+	  nameElement.text(username);
+	  messageSpan.text(message);
+	  messageElement.prepend(nameElement);
+	  messageElement.append(messageSpan);
+	  newMessageList.append(messageElement);
+	  document.getElementById('nameInput').value = '';
 
       //SAVE DATA TO FIREBASE AND EMPTY FIELD
-      messagesRef.push({name:username, text:message});
+	  messagesRef.push({name:username, text:message, priority:priority});
       messageField.val('');
     }
   });
 
   // Add a callback that is triggered for each chat message.
-  messagesRef.limitToLast(10).on('child_added', function (snapshot) {
+  messagesRef.limitToLast(100).on('child_added', function (snapshot) {
     //GET DATA
     var data = snapshot.val();
     var username = data.name || "anonymous";
     var message = data.text;
-
+	var color = data.priority || "blue";
+	
     //CREATE ELEMENTS MESSAGE & SANITIZE TEXT
     var messageElement = $("<li>");
-    var nameElement = $("<strong class='example-chat-username'></strong>")
+	var messageSpan = $("<span style='color:"+color+"'></span>");
+    var nameElement = $("<strong class='example-chat-username'></strong></li>");
     nameElement.text(username);
-    messageElement.text(message).prepend(nameElement);
+	messageSpan.text(message);
+	messageElement.prepend(nameElement);
+	messageElement.append(messageSpan);
 
     //ADD MESSAGE
-    messageList.append(messageElement)
+    messageList.append(messageElement);
 
     //SCROLL TO BOTTOM OF MESSAGE LIST
     messageList[0].scrollTop = messageList[0].scrollHeight;
